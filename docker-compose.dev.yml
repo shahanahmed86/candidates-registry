@@ -1,0 +1,85 @@
+name: candidate-registry-dev
+
+services:
+  web:
+    tty: true
+    image: nginx:1.27
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app
+    logging:
+      options:
+        max-size: 512m
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+  server:
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    networks:
+      - app
+    logging:
+      options:
+        max-size: 1024m
+    volumes:
+      - /code/.venv
+      - ./:/code
+    env_file:
+      - .env.dev
+    command: poetry run start_dev
+
+  db:
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - db_dev:/data/db
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    env_file:
+      - .env.dev
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$DB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
+      - MONGO_INITDB_DATABASE=$DB_NAME
+      - MONGO_USERNAME=$DB_USER
+      - MONGO_PASSWORD=$DB_PASSWORD
+
+  db-gui:
+    image: mongo-express
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8080:8080
+    env_file:
+      - .env.dev
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=$DB_ROOT_USERNAME
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=$DB_ROOT_PASSWORD
+      - ME_CONFIG_MONGODB_URL=mongodb://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
+    links:
+      - db:mongo
+    networks:
+      - app
+    logging:
+      options:
+        max-size: 512m
+
+volumes:
+  db_dev:
+    driver: local
+
+networks:
+  app:
+    driver: bridge

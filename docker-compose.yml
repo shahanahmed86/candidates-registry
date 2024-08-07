@@ -1,0 +1,14 @@
+services:    
+  db:
+    image: mongo:6.0.16-jammy
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - app
+    logging:
+      options:
+        max-size: 512m

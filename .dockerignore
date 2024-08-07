@@ -1,0 +1,11 @@
+.venv
+Dockerfile
+.dockerignore
+.git
+.gitignore
+docker-compose*.yml
+.env*
+!.env.example
+Makefile
+dist
+secrets
