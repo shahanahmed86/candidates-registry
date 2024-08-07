@@ -16,7 +16,7 @@ EXPOSE 7000
 WORKDIR /code
 
 RUN pip install poetry==1.8.3
-COPY ./pyproject.toml ./pyproject.toml
+COPY pyproject.toml poetry.lock ./
 RUN poetry install --only main --no-root --no-cache
 
 HEALTHCHECK --retries=5 --timeout=5s CMD curl -f localhost:7000/healthcheck || exit 1
@@ -32,7 +32,7 @@ ENV PATH=/code/.venv/bin:$PATH
 RUN poetry install --no-cache
 COPY . .
 ARG BUILD_FLAG
-RUN if [ "$BUILD_FLAG" = "y" ]; then poetry run build; \
+RUN if [ "$BUILD_FLAG" = "y" ]; then poetry build --format sdist; \
     else echo "Skipping build step as per build argument"; \
     fi
 
@@ -43,4 +43,4 @@ COPY --from=dev /code/dist/*.tar.gz ./
 RUN pip install /code/*.tar.gz
 
 FROM source AS prod
-CMD [ "poetry", "run", "start" ]
+CMD ["poetry", "run", "uvicorn", "--host 0.0.0.0", "--port 7000", "main:app"]
