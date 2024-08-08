@@ -16,12 +16,14 @@ EXPOSE 7000
 WORKDIR /code
 
 RUN pip install poetry==1.8.3
-COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false
+
+COPY ./pyproject.toml ./pyproject.toml
 RUN poetry install --only main --no-root --no-cache
 
 HEALTHCHECK --retries=5 --timeout=5s CMD curl -f localhost:7000/healthcheck || exit 1
 
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY ./docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 ### dev stage
