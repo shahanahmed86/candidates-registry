@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Configs(BaseSettings):
     ENVIRONMENT: str
     BCRYPT_SALT: str
@@ -22,5 +23,6 @@ class Configs(BaseSettings):
     use below code to load secrets from a .env
     model_config = SettingsConfigDict(env_file=".env")
     """
+
 
 configs = Configs()
