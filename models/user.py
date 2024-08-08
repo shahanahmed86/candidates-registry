@@ -1,7 +1,6 @@
-from typing import Optional
-from bson import ObjectId
-from pydantic import BaseModel, Field
 from enum import Enum
+
+from pydantic import BaseModel, Field
 
 
 class Gender(str, Enum):
@@ -10,7 +9,7 @@ class Gender(str, Enum):
 
 
 class User(BaseModel):
-    id: Optional[ObjectId] = Field(alias="_id", default=None)
+    id: str = Field(alias="_id", default=None)
     email: str
     password: str = Field(min_length=6, max_length=20)
     first_name: str = Field(min_length=3, max_length=50)
@@ -20,7 +19,6 @@ class User(BaseModel):
 
     model_config = {
         "arbitrary_types_allowed": True,
-        "json_encoders": {ObjectId: str},
         "json_schema_extra": {
             "example": {
                 "email": "test@domain.com",
