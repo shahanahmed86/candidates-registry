@@ -24,6 +24,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      broker:
+        condition: service_healthy
     build:
       context: .
       target: dev
@@ -37,6 +39,23 @@ services:
     env_file:
       - .env.dev
     command: poetry run uvicorn --host 0.0.0.0 --port 7000 main:app --reload
+    networks:
+      - app
+
+  broker:
+    tty: true
+    image: rabbitmq:3.13.6
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    restart: unless-stopped
+    volumes:
+      - broker:/var/lib/rabbitmq
+    logging:
+      options:
+        max-size: 512m
     networks:
       - app
 
@@ -93,6 +112,8 @@ services:
 
 volumes:
   db:
+    driver: local
+  broker:
     driver: local
 
 networks:
