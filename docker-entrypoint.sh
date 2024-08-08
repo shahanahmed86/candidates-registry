@@ -23,18 +23,18 @@ file_env() {
 	unset "$fileVar"
 }
 
-file_env 'APP_PORT'
-file_env 'APP_PROTOCOL'
-file_env 'APP_HOST'
 file_env 'BCRYPT_SALT'
 file_env 'JWT_SECRET'
 file_env 'JWT_EXPIRY'
+file_env 'JWT_ALGORITHM'
 file_env 'DB_HOST'
 file_env 'DB_PORT'
-file_env 'DB_ROOT_USERNAME'
-file_env 'DB_ROOT_PASSWORD'
-file_env 'DB_NAME'
 file_env 'DB_USER'
 file_env 'DB_PASSWORD'
+file_env 'DB_NAME'
+file_env 'DB_ROOT_USERNAME'
+file_env 'DB_ROOT_PASSWORD'
+file_env 'SENTRY_DSN'
+file_env 'BROKER'
 
 exec "$@"
