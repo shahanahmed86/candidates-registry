@@ -19,7 +19,7 @@ router = APIRouter()
 async def logged_in(user: user_session):
     return {
         "message": "You have an active logged-in session",
-        "user": User(**user),
+        "data": User(**user),
     }
 
 
@@ -50,7 +50,7 @@ async def signup(
 
     return {
         "message": "Account was created and logged in successfully",
-        "user": User(**user),
+        "data": User(**user),
     }
 
 
@@ -71,7 +71,7 @@ async def login(
 
     jwt_encode(str(user["_id"]), res)
 
-    return {"message": "You've logged in successfully", "user": User(**user)}
+    return {"message": "You've logged in successfully", "data": User(**user)}
 
 
 @router.delete(
@@ -80,6 +80,6 @@ async def login(
     status_code=status.HTTP_200_OK,
     response_model_by_alias=False,
 )
-async def logout(_: user_session, res: Response):
+async def logout(res: Response):
     res.delete_cookie(key="access_token", httponly=True)
     return {"message": "You've successfully logged out"}
