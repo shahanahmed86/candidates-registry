@@ -2,7 +2,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, EmailStr, Field
 
-from schemas.user import Gender
+from schemas.common import Gender
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 

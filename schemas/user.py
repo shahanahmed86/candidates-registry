@@ -1,11 +1,5 @@
-from enum import Enum
-
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
-
-class Gender(str, Enum):
-    male = "male"
-    female = "female"
+from .common import Gender
 
 
 class Signup(BaseModel):
@@ -26,7 +20,7 @@ class Signup(BaseModel):
                 "first_name": "shahan",
                 "last_name": "khan",
                 "gender": "male",
-                "phone": "+923362122588",
+                "phone": "+923331234567",
             }
         },
     )
