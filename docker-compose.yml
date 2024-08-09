@@ -17,7 +17,7 @@ services:
       - 80:80
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./assets:/code/assets
+      - ./assets:/app/assets
 
   server:
     tty: true
@@ -61,9 +61,9 @@ services:
 
   db:
     tty: true
-    image: mongo:7.0.13-rc0-jammy
+    image: mongo:4.4
     healthcheck:
-      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 10s
       retries: 5

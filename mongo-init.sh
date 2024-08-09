@@ -1,4 +1,4 @@
-mongosh -- "$MONGO_INITDB_DATABASE" <<EOF
+mongo -- "$MONGO_INITDB_DATABASE" <<EOF
   db.createUser({
     user: "$MONGO_USERNAME",
     pwd: "$MONGO_PASSWORD",
