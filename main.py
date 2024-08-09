@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 
-from middleware import add_middlewares
+from middleware.main import add_middlewares
 from routes import auth, main
 
-app = FastAPI()
-
+app = FastAPI(
+    title="Candidate APIs",
+    summary="A sample application doing CRUD operations on candidates",
+)
 
 # middlewares
 add_middlewares(app)
