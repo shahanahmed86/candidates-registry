@@ -1,32 +1,17 @@
-from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, EmailStr, Field
 
+from schemas.user import Gender
 
-class Gender(str, Enum):
-    male = "male"
-    female = "female"
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
 
 class User(BaseModel):
-    id: str = Field(alias="_id", default=None)
-    email: str
-    password: str = Field(min_length=6, max_length=20)
-    first_name: str = Field(min_length=3, max_length=50)
-    last_name: str = Field(min_length=3, max_length=50)
+    id: PyObjectId = Field(alias="_id")
+    email: EmailStr
+    password: str
+    first_name: str | None
+    last_name: str | None
     gender: Gender
-    phone: str = Field(min_length=9, max_length=15)
-
-    model_config = {
-        "arbitrary_types_allowed": True,
-        "json_schema_extra": {
-            "example": {
-                "email": "test@domain.com",
-                "password": "123Abc456",
-                "first_name": "shahan",
-                "last_name": "khan",
-                "gender": "male",
-                "phone": "+923362122588",
-            }
-        },
-    }
+    phone: str
