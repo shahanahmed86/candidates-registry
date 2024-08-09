@@ -12,7 +12,9 @@ async def verify_session(db: db_dependency, req: Request):
     token = req.cookies.get("access_token")
 
     if not token:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Authorization header missing")
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "You need to login before proceed"
+        )
 
     payload = jwt_decode(token)
     user_id: Optional[str] = payload.get("id")
