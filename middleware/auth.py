@@ -19,12 +19,16 @@ async def verify_session(db: db_dependency, req: Request):
     payload = jwt_decode(token)
     user_id: Optional[str] = payload.get("id")
 
-    if user_id is None:
+    if user_id is None or not ObjectId.is_valid(user_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized")
 
     coll = db.get_collection("users")
 
     user = await coll.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized")
+
     return user
 
 
