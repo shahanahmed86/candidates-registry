@@ -1,20 +1,22 @@
 from datetime import datetime, timedelta, timezone
 
+from fastapi import Response
 from jwt import decode, encode
 
 from configs import configs
 
 
 def jwt_encode(
-    user_id: int,
+    user_id: str,
+    res: Response,
     expires_delta=timedelta(milliseconds=int(configs.JWT_EXPIRY)),
 ) -> str:
+    encoded = {"sub": "candidates", "id": user_id}
     expires = datetime.now(timezone.utc) + expires_delta
-    encoded_payload = {"id": user_id, "exp": expires}
+    encoded.update({"exp": expires})
 
-    return encode(
-        encoded_payload, key=configs.JWT_SECRET, algorithm=configs.JWT_ALGORITHM
-    )
+    token = encode(encoded, key=configs.JWT_SECRET, algorithm=configs.JWT_ALGORITHM)
+    res.set_cookie(key="access_token", value=token, httponly=True)
 
 
 def jwt_decode(token: str) -> dict:
