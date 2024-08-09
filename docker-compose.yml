@@ -1,4 +1,4 @@
-name: candidate-registry
+name: candidate
 
 services:
   web:
