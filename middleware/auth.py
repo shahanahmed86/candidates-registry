@@ -32,11 +32,9 @@ async def verify_session(db: db_dependency, req: Request, res: Response):
 
         return user
     except HTTPException as e:
-        res.delete_cookie(key="access_token", httponly=True)
         raise HTTPException(e.status_code, e.detail)
 
     except ExpiredSignatureError as _:
-        res.delete_cookie(key="access_token", httponly=True)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session is expired!")
 
 
