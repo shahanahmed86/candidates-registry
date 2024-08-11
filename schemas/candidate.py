@@ -1,6 +1,10 @@
-from .common import Gender
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from models.candidate import Candidate
+
+from .common import Gender
 
 
 class CreateCandidate(BaseModel):
@@ -57,3 +61,29 @@ class UpdateCandidate(BaseModel):
             }
         },
     )
+
+
+class GetCandidateResponse(BaseModel):
+    message: str
+    data: Candidate | None
+
+
+class UpdateOrRemoveCandidateResponse(BaseModel):
+    message: str
+
+
+class CreateCandidateResponse(BaseModel):
+    message: str
+    data: Candidate
+
+
+class Pagination(BaseModel):
+    counts: int
+    pages: int
+    page: int
+    rows: List[Candidate]
+
+
+class GetAllCandidatesResponse(BaseModel):
+    message: str
+    data: Pagination

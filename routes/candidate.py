@@ -1,18 +1,32 @@
-from bson import ObjectId
+from csv import DictWriter
+from io import StringIO
+
 from fastapi import APIRouter, HTTPException, Path, Query, status
+from fastapi.responses import StreamingResponse
 
 from database import db_dependency
-from models.candidate import Candidate
-from schemas.candidate import CreateCandidate, UpdateCandidate
+from helper import check_validaty_and_existance, format_response
+from schemas.candidate import (
+    CreateCandidate,
+    CreateCandidateResponse,
+    GetAllCandidatesResponse,
+    GetCandidateResponse,
+    UpdateCandidate,
+    UpdateOrRemoveCandidateResponse,
+)
 
 router = APIRouter()
 
 
 @router.post(
     "/",
-    response_description="Create a candidate",
     status_code=status.HTTP_201_CREATED,
+    response_description="Create a candidate",
     response_model_by_alias=False,
+    response_model=CreateCandidateResponse,
+    responses={
+        409: format_response("The user has already registered with this email!"),
+    },
 )
 async def create_candidate(db: db_dependency, data: CreateCandidate):
     coll = db.get_collection("candidates")
@@ -30,73 +44,121 @@ async def create_candidate(db: db_dependency, data: CreateCandidate):
 
     return {
         "message": "You've successfully created a candidate",
-        "data": Candidate(**candidate),
+        "data": candidate,
     }
 
 
 @router.get(
-    "/{id}",
-    response_description="Get candidate by Id",
+    "/generate-report",
+    response_description="Generate candidates data in CSV",
     status_code=status.HTTP_200_OK,
     response_model_by_alias=False,
+    responses={
+        404: format_response("Candidates data is empty!"),
+        200: {
+            "description": "CSV file stream",
+            "content": {
+                "text/csv": {
+                    "example": "id,name,age\n1,John Doe,30\n2,Jane Smith,25",
+                }
+            },
+        },
+    },
+)
+async def generate_report(db: db_dependency):
+    coll = db.get_collection("candidates")
+
+    cursor = coll.find({})
+    data = [doc async for doc in cursor]
+
+    if not data or len(data) == 0:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidates data is empty!")
+
+    # Create an in-memory stream for the CSV data
+    output = StringIO()
+    writer = DictWriter(output, fieldnames=data[0].keys())
+    writer.writeheader()
+    writer.writerows(data)
+
+    # Set the stream position to the beginning
+    output.seek(0)
+
+    # Return the CSV file as a response
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=export.csv"},
+    )
+
+
+@router.get(
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+    response_description="Get candidate",
+    response_model_by_alias=False,
+    response_model=GetCandidateResponse,
+    responses={
+        404: format_response("Candidate not found!"),
+        400: format_response("The ID was invalid!"),
+    },
 )
 async def get_candidate(db: db_dependency, id: str = Path()):
     coll = db.get_collection("candidates")
 
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, "The ID was invalid!")
+    candidate = await check_validaty_and_existance(coll, id)
 
-    candidate = await coll.find_one({"_id": ObjectId(id)})
-
-    return {
-        "message": "You've successfully found the candidate!",
-        "data": Candidate(**candidate) if candidate else None,
-    }
+    return {"message": "You've successfully found the candidate!", "data": candidate}
 
 
 @router.put(
     "/{id}",
-    response_description="Update candidate by Id",
     status_code=status.HTTP_200_OK,
+    response_description="Update candidate",
     response_model_by_alias=False,
+    response_model=UpdateOrRemoveCandidateResponse,
+    responses={
+        400: format_response("The ID was invalid!"),
+        404: format_response("Candidate not found!"),
+        409: format_response("The user has already registered with this email!"),
+    },
 )
 async def update_candidate(db: db_dependency, data: UpdateCandidate, id: str = Path()):
     coll = db.get_collection("candidates")
 
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, "The ID was invalid!")
+    candidate = await check_validaty_and_existance(coll, id)
 
-    exists = await coll.find_one(
-        {"$and": [{"_id": {"$ne": ObjectId(id)}}, {"email": data.email}]}
+    is_duplicate = await coll.find_one(
+        {"$and": [{"_id": {"$ne": candidate["_id"]}}, {"email": data.email}]}
     )
-    if exists:
+    if is_duplicate:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "The user has already registered with this email!"
         )
 
-    filter = {"_id": ObjectId(id)}
-    payload = {"$set": data.model_dump()}
-    updated_candidate = await coll.update_one(filter, payload)
+    await coll.update_one({"_id": candidate["_id"]}, {"$set": data.model_dump()})
 
-    prefix = "successfully" if updated_candidate.modified_count > 0 else "already"
-    return {"message": f"You've {prefix} updated the candidate"}
+    return {"message": "You have successfully updated the candidate"}
 
 
 @router.delete(
     "/{id}",
-    response_description="Delete candidate by Id",
     status_code=status.HTTP_200_OK,
+    response_description="Delete candidate",
     response_model_by_alias=False,
+    response_model=UpdateOrRemoveCandidateResponse,
+    responses={
+        404: format_response("Candidate not found!"),
+        400: format_response("The ID was invalid!"),
+    },
 )
 async def delete_candidate(db: db_dependency, id: str = Path()):
     coll = db.get_collection("candidates")
 
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, "The ID was invalid!")
+    candidate = await check_validaty_and_existance(coll, id)
 
-    candidate = await coll.find_one_and_delete({"_id": ObjectId(id)})
+    deleted_candidate = await coll.find_one_and_delete({"_id": candidate["_id"]})
 
-    prefix = "successfully" if candidate else "already"
+    prefix = "successfully" if deleted_candidate else "already"
     return {
         "message": f"You've {prefix} deleted the candidate!",
     }
@@ -104,9 +166,10 @@ async def delete_candidate(db: db_dependency, id: str = Path()):
 
 @router.get(
     "/",
-    response_description="Get all candidates",
     status_code=status.HTTP_200_OK,
+    response_description="Get all candidates",
     response_model_by_alias=False,
+    response_model=GetAllCandidatesResponse,
 )
 async def get_all_candidates(
     db: db_dependency,
@@ -117,7 +180,9 @@ async def get_all_candidates(
     coll = db.get_collection("candidates")
 
     search_query = (
-        {
+        {}
+        if not search
+        else {
             "$or": [
                 {"email": {"$regex": search, "$options": "i"}},
                 {"first_name": {"$regex": search, "$options": "i"}},
@@ -129,12 +194,10 @@ async def get_all_candidates(
                 {"applied_for": {"$regex": search, "$options": "i"}},
             ]
         }
-        if search
-        else {}
     )
 
     cursor = coll.find(search_query).skip((skip - 1) * limit).limit(limit)
-    rows = [Candidate(**doc) async for doc in cursor]
+    rows = [doc async for doc in cursor]
 
     counts = await coll.count_documents({})
 

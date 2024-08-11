@@ -1,6 +1,6 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
-from middleware.auth import verify_session
+from middleware.auth import user_session
 from middleware.main import add_middlewares
 from routes import auth, candidate, main
 
@@ -18,5 +18,5 @@ app.include_router(
     prefix="/candidates",
     tags=["candidates"],
     router=candidate.router,
-    dependencies=[Depends(verify_session)],
+    dependencies=[user_session],
 )

@@ -1,4 +1,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from models.user import User
+
 from .common import Gender
 
 
@@ -40,3 +43,12 @@ class Login(BaseModel):
             }
         },
     )
+
+
+class AuthResponse(BaseModel):
+    message: str
+    data: User
+
+
+class GuestResponse(BaseModel):
+    message: str

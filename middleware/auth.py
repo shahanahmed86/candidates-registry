@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Optional
 
 from bson import ObjectId
 from fastapi import Depends, HTTPException, Request, Response, status
@@ -6,7 +6,6 @@ from jwt import ExpiredSignatureError
 
 from database import db_dependency
 from library.jwt import jwt_decode
-from models.user import User
 
 
 async def verify_session(db: db_dependency, req: Request, res: Response):
@@ -41,15 +40,15 @@ async def verify_session(db: db_dependency, req: Request, res: Response):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session is expired!")
 
 
-user_session = Annotated[User, Depends(verify_session)]
+user_session = Depends(verify_session)
 
 
 async def verify_guest(req: Request):
     token = req.cookies.get("access_token")
     if token:
         raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "You need to logout before proceed"
+            status.HTTP_403_FORBIDDEN, "You need to logout before proceed!"
         )
 
 
-guest_session = Annotated[None, Depends(verify_guest)]
+guest_session = Depends(verify_guest)
