@@ -14,7 +14,7 @@ async def verify_session(db: db_dependency, req: Request, res: Response):
 
     if not token:
         raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "You need to login before proceed"
+            status.HTTP_403_FORBIDDEN, "You need to login before proceed!"
         )
 
     try:
@@ -22,14 +22,14 @@ async def verify_session(db: db_dependency, req: Request, res: Response):
         user_id: Optional[str] = payload.get("id")
 
         if user_id is None or not ObjectId.is_valid(user_id):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized!")
 
         coll = db.get_collection("users")
 
         user = await coll.find_one({"_id": ObjectId(user_id)})
 
         if not user:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not Authorized!")
 
         return user
     except HTTPException as e:
