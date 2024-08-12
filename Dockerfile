@@ -38,6 +38,13 @@ RUN if [ "$BUILD_FLAG" = "y" ]; then poetry build --format sdist; \
     else echo "Skipping build step as per build argument"; \
     fi
 
+### test stage
+FROM base AS test
+ENV ENVIRONMENT=test
+ENV PATH=/code/.venv/bin:$PATH
+RUN poetry install --no-cache
+COPY . .
+
 ### production stage
 FROM base AS source
 COPY . .
@@ -45,4 +52,4 @@ COPY --from=dev /code/dist/*.tar.gz ./
 RUN pip install /code/*.tar.gz
 
 FROM source AS prod
-CMD ["poetry", "run", "uvicorn", "--host 0.0.0.0", "--port 7000", "main:app"]
+CMD ["poetry", "run", "uvicorn", "--log-level critical", "--host 0.0.0.0", "--port 7000", "main:app"]

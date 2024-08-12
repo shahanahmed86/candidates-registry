@@ -1,58 +1,23 @@
-name: candidate
-
 services:
-  web:
-    tty: true
-    image: nginx:1.27
-    depends_on:
-      server:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - app
-    logging:
-      options:
-        max-size: 512m
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./assets:/app/assets
-
   server:
-    tty: true
     depends_on:
       db:
         condition: service_healthy
       broker:
         condition: service_healthy
-    build:
-      context: .
-      target: dev
-    restart: unless-stopped
     logging:
       options:
         max-size: 1024m
-    volumes:
-      - /code/.venv
-      - ./:/code
-    env_file:
-      - .env.dev
-    command: poetry run uvicorn --host 0.0.0.0 --port 7000 main:app --reload
     networks:
       - app
 
   broker:
-    tty: true
     image: rabbitmq:3.13.6
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
       timeout: 30s
       retries: 3
-    restart: unless-stopped
-    volumes:
-      - broker:/var/lib/rabbitmq
     logging:
       options:
         max-size: 512m
@@ -60,7 +25,6 @@ services:
       - app
 
   db:
-    tty: true
     image: mongo:4.4
     healthcheck:
       test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
@@ -68,12 +32,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
-    restart: unless-stopped
-    volumes:
-      - db:/data/db
-      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
-    env_file:
-      - .env.dev
     environment:
       - MONGO_INITDB_ROOT_USERNAME=$DB_ROOT_USERNAME
       - MONGO_INITDB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
@@ -85,36 +43,6 @@ services:
         max-size: 512m
     networks:
       - app
-
-  db-gui:
-    image: mongo-express
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - 8080:8081
-    env_file:
-      - .env.dev
-    environment:
-      - ME_CONFIG_OPTIONS_EDITORTHEME="ambiance"
-      - ME_CONFIG_MONGODB_SERVER=db
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=$DB_ROOT_USERNAME
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=$DB_ROOT_PASSWORD
-      - ME_CONFIG_MONGODB_URL=mongodb://$DB_USER:$DB_PASSWORD@db:$DB_PORT/$DB_NAME
-    links:
-      - db
-    logging:
-      options:
-        max-size: 512m
-    networks:
-      - app
-
-volumes:
-  db:
-    driver: local
-  broker:
-    driver: local
 
 networks:
   app:

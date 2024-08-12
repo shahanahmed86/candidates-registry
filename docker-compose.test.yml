@@ -1,0 +1,33 @@
+name: candidate-test
+
+services:
+  server:
+    build:
+      context: .
+      target: test
+    restart: no
+    volumes:
+      - /code/.venv
+      - ./:/code
+    env_file:
+      - .env.dev
+    command: poetry run pytest --disable-warnings --last-failed --cache-clear
+
+  broker:
+    restart: no
+    volumes:
+      - broker_test:/var/lib/rabbitmq
+
+  db:
+    restart: no
+    volumes:
+      - db_test:/data/db
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    env_file:
+      - .env.dev
+
+volumes:
+  db_test:
+    driver: local
+  broker_test:
+    driver: local
