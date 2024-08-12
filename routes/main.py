@@ -1,21 +1,14 @@
-from fastapi import APIRouter, status
-from sentry_sdk import init
+from os import uname
 
-from configs import configs
+from fastapi import APIRouter, status
 
 router = APIRouter()
-
-init(
-    dsn=configs.SENTRY_DSN,
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
-)
 
 
 # to check whether the server is healthy or not
 @router.get("/healthcheck", status_code=status.HTTP_200_OK)
 async def healthy():
-    return "I am healthy"
+    return f"I am healthy at {uname().nodename}"
 
 
 # to test the setry error log
