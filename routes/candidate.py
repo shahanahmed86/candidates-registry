@@ -156,11 +156,10 @@ async def delete_candidate(db: db_dependency, id: str = Path()):
 
     candidate = await check_validaty_and_existance(coll, id)
 
-    deleted_candidate = await coll.find_one_and_delete({"_id": candidate["_id"]})
+    await coll.find_one_and_delete({"_id": candidate["_id"]})
 
-    prefix = "successfully" if deleted_candidate else "already"
     return {
-        "message": f"You've {prefix} deleted the candidate!",
+        "message": "You've successfully deleted the candidate!",
     }
 
 

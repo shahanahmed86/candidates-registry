@@ -12,7 +12,7 @@ def format_response(message: str) -> str:
 
 async def check_validaty_and_existance(coll: AsyncIOMotorCollection, _id: str) -> dict:
     if not ObjectId.is_valid(_id):
-        raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, "The ID was invalid!")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "The ID was invalid!")
 
     record = await coll.find_one({"_id": ObjectId(_id)})
     if not record:

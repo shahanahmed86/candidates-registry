@@ -73,7 +73,6 @@ async def signup(
     response_model=AuthResponse,
     responses={
         403: format_response("You need to logout before proceed!"),
-        409: format_response("Email address already exists!"),
     },
 )
 async def login(
