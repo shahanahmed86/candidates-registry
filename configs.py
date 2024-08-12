@@ -3,7 +3,6 @@ from pydantic_settings import BaseSettings
 
 class Configs(BaseSettings):
     ENVIRONMENT: str
-    BCRYPT_SALT: str
     JWT_SECRET: str
     JWT_EXPIRY: str
     JWT_ALGORITHM: str

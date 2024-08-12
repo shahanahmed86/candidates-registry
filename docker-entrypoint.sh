@@ -23,7 +23,6 @@ file_env() {
 	unset "$fileVar"
 }
 
-file_env 'BCRYPT_SALT'
 file_env 'JWT_SECRET'
 file_env 'JWT_EXPIRY'
 file_env 'JWT_ALGORITHM'
