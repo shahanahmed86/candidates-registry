@@ -27,4 +27,4 @@ run-test-down:
 	down -v
 run-test:
 	docker exec -it candidate-dev-server-1 \
-	poetry run pytest --disable-warnings --last-failed --cache-clear
+	poetry run pytest --disable-warnings

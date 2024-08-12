@@ -11,7 +11,7 @@ services:
       - ./:/code
     env_file:
       - .env.dev
-    command: poetry run pytest --disable-warnings --last-failed --cache-clear
+    command: poetry run pytest --disable-warnings
 
   broker:
     restart: no
