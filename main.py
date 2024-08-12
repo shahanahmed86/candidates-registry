@@ -8,6 +8,16 @@ from routes import auth, candidate, main
 app = FastAPI(
     title="Candidate APIs",
     summary="A sample application doing CRUD operations on candidates",
+    responses={
+        429: {
+            "description": "Too Many Requests",
+            "content": {
+                "application/json": {
+                    "example": {"error": "Rate limit exceeded: 5 per 1 minute"}
+                }
+            },
+        }
+    },
 )
 
 # middlewares
