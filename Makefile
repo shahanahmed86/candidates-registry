@@ -19,12 +19,12 @@ run-dev-down-hard:
 run-test-up:
 	docker compose \
 	-f docker-compose.yml -f docker-compose.test.yml \
-	up --abort-on-container-exit --build -V \
-	&& make run-test-down
+	up --abort-on-container-exit --build -V; \
+	make run-test-down
 run-test-down:
 	docker compose \
 	-f docker-compose.yml -f docker-compose.test.yml \
 	down -v
 run-test:
 	docker exec -it candidate-dev-server-1 \
-	poetry run pytest --disable-warnings
+	bash -c "ENVIRONMENT=test poetry run pytest --disable-warnings"
