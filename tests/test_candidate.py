@@ -27,6 +27,33 @@ async def test_create_candidate(db: AsyncIOMotorDatabase):
 
 
 @pytest.mark.asyncio
+async def test_generate_report(db: AsyncIOMotorDatabase):
+    try:
+        client.post("/user", json=signup_data)
+
+        response: Response = client.get("/candidates/generate-report")
+        res_data = response.json()
+
+        assert response.status_code == 404
+        assert res_data["detail"] == "Candidates data is empty!"
+
+        client.post("/candidates", json=insert_candidate)
+
+        response: Response = client.get("/candidates/generate-report")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/csv; charset=utf-8"
+        content = response.content  # This will load the full content
+
+        assert (
+            b"id,email,first_name,last_name,gender,phone,current_job,current_employer,applied_for"
+            in content
+        )
+    finally:
+        await remove_test_candidate(db)
+
+
+@pytest.mark.asyncio
 async def test_get_candidate(db: AsyncIOMotorDatabase):
     try:
         candidate = create_test_candidate(db)
